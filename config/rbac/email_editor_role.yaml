@@ -1,0 +1,27 @@
+# permissions for end users to edit emails.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app.kubernetes.io/name: mailerlite-operator
+    app.kubernetes.io/managed-by: kustomize
+  name: email-editor-role
+rules:
+- apiGroups:
+  - email.mailerlite.com
+  resources:
+  - emails
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - email.mailerlite.com
+  resources:
+  - emails/status
+  verbs:
+  - get

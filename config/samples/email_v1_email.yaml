@@ -1,0 +1,9 @@
+apiVersion: email.mailerlite.com/v1
+kind: Email
+metadata:
+  labels:
+    app.kubernetes.io/name: mailerlite-operator
+    app.kubernetes.io/managed-by: kustomize
+  name: email-sample
+spec:
+  # TODO(user): Add fields here
