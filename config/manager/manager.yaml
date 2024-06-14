@@ -10,7 +10,7 @@ metadata:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: controller-manager
+  name: email-operator
   namespace: system
   labels:
     control-plane: controller-manager
@@ -86,10 +86,10 @@ spec:
         # More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
         resources:
           limits:
-            cpu: 500m
-            memory: 128Mi
+            cpu: 0.8
+            memory: 256Mi
           requests:
-            cpu: 10m
-            memory: 64Mi
-      serviceAccountName: controller-manager
+            cpu: 0.4
+            memory: 128Mi
+      serviceAccountName: email-operator
       terminationGracePeriodSeconds: 10
