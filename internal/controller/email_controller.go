@@ -19,10 +19,10 @@ package controller
 import (
 	"bytes"
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"mime/multipart"
 	"net/http"
 	"strings"
@@ -91,10 +91,15 @@ func (r *EmailReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
 
-	apiToken := string(secret.Data["apiToken"])
+	apiToken, err := base64.StdEncoding.DecodeString(string(secret.Data["apiToken"]))
+
+	if err != nil {
+		log.Error(err, "error decoding secret")
+		return ctrl.Result{}, err
+	}
 
 	// Send the email via MailerSend
-	deliveryStatus, messageID, err := sendEmail(apiToken, config.Spec.SenderEmail, email.Spec.RecipientEmail, email.Spec.Subject, email.Spec.Body)
+	deliveryStatus, messageID, err := sendEmail(string(apiToken), config.Spec.SenderEmail, email.Spec.RecipientEmail, email.Spec.Subject, email.Spec.Body)
 	if err != nil {
 		log.Error(err, "failed to send email")
 		email.Status.DeliveryStatus = "Failed"
@@ -205,7 +210,7 @@ func sendEmailWithMailgun(apiToken, senderEmail, recipientEmail, subject, body s
 		return "Failed", "", err
 	}
 	defer res.Body.Close()
-	bodyBytes, err := ioutil.ReadAll(res.Body)
+	bodyBytes, err := io.ReadAll(res.Body)
 	if err != nil {
 		return "Failed", "", err
 	}

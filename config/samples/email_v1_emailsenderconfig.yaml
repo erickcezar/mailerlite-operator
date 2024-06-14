@@ -4,6 +4,18 @@ metadata:
   labels:
     app.kubernetes.io/name: mailerlite-operator
     app.kubernetes.io/managed-by: kustomize
-  name: emailsenderconfig-sample
+  name: emailsenderconfig-mailgun
 spec:
-  # TODO(user): Add fields here
+  apiTokenSecretRef: mailgun-api
+  senderEmail: mailgun@sandbox21e489be539948a6a0d655711d3c9294.mailgun.org
+---
+apiVersion: email.mailerlite.com/v1
+kind: EmailSenderConfig
+metadata:
+  labels:
+    app.kubernetes.io/name: mailerlite-operator
+    app.kubernetes.io/managed-by: kustomize
+  name: emailsenderconfig-mailersent
+spec:
+  apiTokenSecretRef: mailsersent-api
+  senderEmail: mailersend@trial-yzkq340o0104d796.mlsender.net
