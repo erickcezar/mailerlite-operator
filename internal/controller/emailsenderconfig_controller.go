@@ -55,8 +55,14 @@ func (r *EmailSenderConfigReconciler) Reconcile(ctx context.Context, req ctrl.Re
 	// For simplicity, just log the creation or update
 	log.Info("EmailSenderConfig created or updated", "name", config.Name)
 
-	// Update status
-	config.Status.Status = "Ready"
+	_, err = getSecret(ctx, config.Spec.APITokenSecretRef, r.Client, log, req.Namespace)
+
+	if err != nil {
+		config.Status.Status = "Secret not found"
+	} else {
+		config.Status.Status = "Ready"
+	}
+
 	err = r.Status().Update(ctx, config)
 	if err != nil {
 		log.Error(err, "unable to update EmailSenderConfig status")

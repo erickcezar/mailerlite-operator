@@ -27,7 +27,6 @@ import (
 	"net/http"
 	"strings"
 
-	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -81,8 +80,7 @@ func (r *EmailReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 	}
 
 	// Fetch the secret containing the API token
-	secret := &corev1.Secret{}
-	err = r.Get(ctx, types.NamespacedName{Name: config.Spec.APITokenSecretRef, Namespace: req.Namespace}, secret)
+	encodedToken, err := getSecret(ctx, config.Spec.APITokenSecretRef, r.Client, log, req.Namespace)
 	if err != nil {
 		log.Error(err, "unable to fetch secret")
 		email.Status.DeliveryStatus = "Failed"
@@ -91,7 +89,7 @@ func (r *EmailReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
 
-	apiToken, err := base64.StdEncoding.DecodeString(string(secret.Data["apiToken"]))
+	apiToken, err := base64.StdEncoding.DecodeString(encodedToken)
 
 	if err != nil {
 		log.Error(err, "error decoding secret")
