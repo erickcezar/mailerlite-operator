@@ -22,34 +22,46 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/log"
 
 	emailv1 "github.com/erickcezar/mailerlite-operator/api/v1"
+	"github.com/go-logr/logr"
 )
 
 // EmailSenderConfigReconciler reconciles a EmailSenderConfig object
 type EmailSenderConfigReconciler struct {
 	client.Client
 	Scheme *runtime.Scheme
+	Log    logr.Logger
 }
 
 // +kubebuilder:rbac:groups=email.mailerlite.com,resources=emailsenderconfigs,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=email.mailerlite.com,resources=emailsenderconfigs/status,verbs=get;update;patch
 // +kubebuilder:rbac:groups=email.mailerlite.com,resources=emailsenderconfigs/finalizers,verbs=update
 
-// Reconcile is part of the main kubernetes reconciliation loop which aims to
-// move the current state of the cluster closer to the desired state.
-// TODO(user): Modify the Reconcile function to compare the state specified by
-// the EmailSenderConfig object against the actual cluster state, and then
-// perform operations to make the cluster state reflect the state specified by
-// the user.
-//
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.18.2/pkg/reconcile
 func (r *EmailSenderConfigReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	_ = log.FromContext(ctx)
+	log := r.Log.WithValues("emailsenderconfig", req.NamespacedName)
 
-	// TODO(user): your logic here
+	// Fetch the EmailSenderConfig instance
+	config := &emailv1.EmailSenderConfig{}
+	err := r.Get(ctx, req.NamespacedName, config)
+	if err != nil {
+		log.Error(err, "unable to fetch EmailSenderConfig")
+		return ctrl.Result{}, client.IgnoreNotFound(err)
+	}
+
+	// Confirm the email sending settings
+	// For simplicity, just log the creation or update
+	log.Info("EmailSenderConfig created or updated", "name", config.Name)
+
+	// Update status
+	config.Status.Status = "Ready"
+	err = r.Status().Update(ctx, config)
+	if err != nil {
+		log.Error(err, "unable to update EmailSenderConfig status")
+		return ctrl.Result{}, err
+	}
 
 	return ctrl.Result{}, nil
 }
