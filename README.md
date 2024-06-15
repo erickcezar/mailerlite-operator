@@ -1,8 +1,6 @@
 # mailerlite-operator
-// TODO(user): Add simple overview of use/purpose
 
-## Description
-// TODO(user): An in-depth paragraph about your project and overview of use
+The `mailerlite-operator` is a Kubernetes operator designed to manage and automate the sending of transactional emails using multiple providers, such as MailerSend and Mailgun. This operator provides custom resource definitions (CRDs) for configuring email sender settings and defining email messages. With cross-namespace capabilities, it monitors and responds to changes in email configurations and triggers email sending processes accordingly, updating the status of email resources to reflect delivery outcomes.
 
 ## Getting Started
 
@@ -12,12 +10,16 @@
 - kubectl version v1.11.3+.
 - Access to a Kubernetes v1.11.3+ cluster.
 
+For this demo, We are using minikube. For more details how to install it, click [here](https://minikube.sigs.k8s.io/docs/)
+
 ### To Deploy on the cluster
 **Build and push your image to the location specified by `IMG`:**
 
 ```sh
-make docker-build docker-push IMG=<some-registry>/mailerlite-operator:tag
+docker-build docker-push IMG=<some-registry>/mailerlite-operator:tag
 ```
+
+For this case, We don't need to run push as we are using local docker.
 
 **NOTE:** This image ought to be published in the personal registry you specified.
 And it is required to have access to pull the image from the working environment.
@@ -96,19 +98,12 @@ kubectl apply -f https://raw.githubusercontent.com/<org>/mailerlite-operator/<ta
 
 More information can be found via the [Kubebuilder Documentation](https://book.kubebuilder.io/introduction.html)
 
-## License
+## References
 
-Copyright 2024.
+[mailsender api doc](https://developers.mailersend.com/api/v1/email.html)  
+[mailgun api doc](
+https://documentation.mailgun.com/docs/mailgun/api-reference/openapi-final/tag/Messages/#tag/Messages/operation/httpapi.(*apiHandler).handler-fm-18)  
+[kubebuilder deploy docs](https://book-v1.book.kubebuilder.io/beyond_basics/deploying_controller)  
+[example how to build operator](https://medium.com/developingnodes/mastering-kubernetes-operators-your-definitive-guide-to-starting-strong-70ff43579eb9)
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
 
