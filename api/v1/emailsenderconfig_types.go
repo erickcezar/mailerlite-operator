@@ -35,6 +35,7 @@ type EmailSenderConfigSpec struct {
 // EmailSenderConfigStatus defines the observed state of EmailSenderConfig
 type EmailSenderConfigStatus struct {
 	Status string `json:"status,omitempty"`
+	Error  string `json:"error,omitempty"`
 }
 
 // +kubebuilder:object:root=true

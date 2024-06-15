@@ -50,6 +50,8 @@ spec:
           status:
             description: EmailSenderConfigStatus defines the observed state of EmailSenderConfig
             properties:
+              error:
+                type: string
               status:
                 type: string
             type: object

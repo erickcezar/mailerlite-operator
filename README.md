@@ -4,6 +4,13 @@ The `mailerlite-operator` is a Kubernetes operator designed to manage and automa
 
 ## Getting Started
 
+### Considerations
+
+- To change the operator namespace, we can change it on `config/default/kustomization.yaml`
+- To change anything on operator deployment, we can change it on `config/manager/manager.yaml`
+- `emailsenderconfig` and `email` can be created in any namespace
+- The secret must be created on the same namespace than `emailsenderconfig`
+
 ### Prerequisites
 - go version v1.22.0+
 - docker version 17.03+.
@@ -114,3 +121,6 @@ https://documentation.mailgun.com/docs/mailgun/api-reference/openapi-final/tag/M
 [example how to build operator](https://medium.com/developingnodes/mastering-kubernetes-operators-your-definitive-guide-to-starting-strong-70ff43579eb9)
 
 
+## Improvements
+
+- `emailsenderconfig` watching secrets changes, so it can be updated with new secrets without recreate it  

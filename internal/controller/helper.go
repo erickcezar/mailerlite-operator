@@ -21,7 +21,7 @@ func getSecret(ctx context.Context, secretName string, k8sClient client.Client, 
 		//		email.Status.DeliveryStatus = "Failed"
 		//		email.Status.Error = "Secret not found"
 		//		r.Status().Update(ctx, email)
-		return "", client.IgnoreNotFound(err)
+		return "", err
 	}
 
 	apiToken, exists := secret.Data["apiToken"]

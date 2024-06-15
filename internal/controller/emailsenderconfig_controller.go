@@ -22,16 +22,15 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/log"
 
 	emailv1 "github.com/erickcezar/mailerlite-operator/api/v1"
-	"github.com/go-logr/logr"
 )
 
 // EmailSenderConfigReconciler reconciles a EmailSenderConfig object
 type EmailSenderConfigReconciler struct {
 	client.Client
 	Scheme *runtime.Scheme
-	Log    logr.Logger
 }
 
 // +kubebuilder:rbac:groups="",resources=events,verbs=create;patch
@@ -39,11 +38,13 @@ type EmailSenderConfigReconciler struct {
 // +kubebuilder:rbac:groups=email.mailerlite.com,resources=emailsenderconfigs,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=email.mailerlite.com,resources=emailsenderconfigs/status,verbs=get;update;patch
 // +kubebuilder:rbac:groups=email.mailerlite.com,resources=emailsenderconfigs/finalizers,verbs=update
+// +kubebuilder:rbac:groups="",resources=namespaces,verbs=*
+// +kubebuilder:rbac:groups="",resources=secrets,verbs=get;list;watch
 
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.18.2/pkg/reconcile
 func (r *EmailSenderConfigReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	log := r.Log.WithValues("emailsenderconfig", req.NamespacedName)
+	log := log.FromContext(ctx).WithName("emailsenderconfig")
 
 	// Fetch the EmailSenderConfig instance
 	config := &emailv1.EmailSenderConfig{}
@@ -60,7 +61,8 @@ func (r *EmailSenderConfigReconciler) Reconcile(ctx context.Context, req ctrl.Re
 	_, err = getSecret(ctx, config.Spec.APITokenSecretRef, r.Client, log, req.Namespace)
 
 	if err != nil {
-		config.Status.Status = "Secret not found"
+		config.Status.Status = "Failed"
+		config.Status.Error = "Secret not found"
 	} else {
 		config.Status.Status = "Ready"
 	}
