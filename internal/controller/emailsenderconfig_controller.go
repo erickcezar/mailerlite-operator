@@ -34,6 +34,8 @@ type EmailSenderConfigReconciler struct {
 	Log    logr.Logger
 }
 
+// +kubebuilder:rbac:groups="",resources=events,verbs=create;patch
+// +kubebuilder:rbac:groups=coordination.k8s.io,resources=leases,verbs=get;list;watch;create;update;patch
 // +kubebuilder:rbac:groups=email.mailerlite.com,resources=emailsenderconfigs,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=email.mailerlite.com,resources=emailsenderconfigs/status,verbs=get;update;patch
 // +kubebuilder:rbac:groups=email.mailerlite.com,resources=emailsenderconfigs/finalizers,verbs=update

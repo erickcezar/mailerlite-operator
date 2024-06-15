@@ -43,6 +43,8 @@ type EmailReconciler struct {
 	Log    logr.Logger
 }
 
+// +kubebuilder:rbac:groups="",resources=events,verbs=create;patch
+// +kubebuilder:rbac:groups=coordination.k8s.io,resources=leases,verbs=get;list;watch;create;update;patch
 // +kubebuilder:rbac:groups=email.mailerlite.com,resources=emails,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=email.mailerlite.com,resources=emails/status,verbs=get;update;patch
 // +kubebuilder:rbac:groups=email.mailerlite.com,resources=emails/finalizers,verbs=update

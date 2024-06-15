@@ -65,6 +65,7 @@ spec:
           - --health-probe-bind-address=:8081
         image: docker.io/library/controller:latest
         name: manager
+        imagePullPolicy: Never
         securityContext:
           allowPrivilegeEscalation: false
           capabilities:
