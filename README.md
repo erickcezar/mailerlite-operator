@@ -20,6 +20,13 @@ docker-build docker-push IMG=<some-registry>/mailerlite-operator:tag
 ```
 
 For this case, We don't need to run push as we are using local docker.
+But we need to run this command:
+
+```
+eval $(minikube docker-env)
+```
+
+So minikube can push images locally. Remember to turn off the imagePullPolicy:Always (use imagePullPolicy:IfNotPresent or imagePullPolicy:Never) in your yaml file. Otherwise Kubernetes won’t use your locally build image and it will pull from the network.
 
 **NOTE:** This image ought to be published in the personal registry you specified.
 And it is required to have access to pull the image from the working environment.
