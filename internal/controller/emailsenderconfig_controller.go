@@ -18,6 +18,8 @@ package controller
 
 import (
 	"context"
+	"net/http"
+	"strings"
 
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -25,6 +27,11 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
 	emailv1 "github.com/erickcezar/mailerlite-operator/api/v1"
+)
+
+const (
+	mailgunURL    = "https://api.mailgun.net/v4/domains"
+	mailersendURL = "https://api.mailersend.com/v1/domains"
 )
 
 // EmailSenderConfigReconciler reconciles a EmailSenderConfig object
@@ -58,13 +65,17 @@ func (r *EmailSenderConfigReconciler) Reconcile(ctx context.Context, req ctrl.Re
 	// For simplicity, just log the creation or update
 	log.Info("EmailSenderConfig created or updated", "name", config.Name)
 
-	_, err = getSecret(ctx, config.Spec.APITokenSecretRef, r.Client, log, req.Namespace)
+	apiToken, err := getSecret(ctx, config.Spec.APITokenSecretRef, r.Client, log, req.Namespace)
 
 	if err != nil {
 		config.Status.Status = "Failed"
 		config.Status.Error = "Secret not found"
 	} else {
-		config.Status.Status = "Ready"
+		if strings.Contains(config.Spec.SenderEmail, "mlsender.net") {
+			config.Status.Status, config.Status.Error = checkTokenMail("mailersend", apiToken, mailersendURL)
+		} else if strings.Contains(config.Spec.SenderEmail, "mailgun.org") {
+			config.Status.Status, config.Status.Error = checkTokenMail("mailgun", apiToken, mailgunURL)
+		}
 	}
 
 	err = r.Status().Update(ctx, config)
@@ -81,4 +92,31 @@ func (r *EmailSenderConfigReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&emailv1.EmailSenderConfig{}).
 		Complete(r)
+}
+
+func checkTokenMail(provider, apiToken, url string) (string, string) {
+
+	client := &http.Client{}
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return "Failed", "Failed request provider api"
+	}
+
+	if provider == "mailgun" {
+		req.SetBasicAuth("api", apiToken)
+	} else if provider == "mailersend" {
+		req.Header.Add("Authorization", "Bearer "+apiToken)
+	}
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return "Failed", "Failed request provider api"
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode == http.StatusOK {
+		return "Ready", ""
+	}
+
+	return "Failed", "Failed auth using apiToken"
 }
