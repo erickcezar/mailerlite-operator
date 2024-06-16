@@ -19,7 +19,6 @@ package controller
 import (
 	"bytes"
 	"context"
-	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -31,6 +30,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/log"
 
 	emailv1 "github.com/erickcezar/mailerlite-operator/api/v1"
 	"github.com/go-logr/logr"
@@ -48,6 +48,7 @@ type EmailReconciler struct {
 // +kubebuilder:rbac:groups=email.mailerlite.com,resources=emails,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=email.mailerlite.com,resources=emails/status,verbs=get;update;patch
 // +kubebuilder:rbac:groups=email.mailerlite.com,resources=emails/finalizers,verbs=update
+// +kubebuilder:rbac:groups=email.mailerlite.com,resources=emailsenderconfigs,verbs=get;list;watch;
 // +kubebuilder:rbac:groups="",resources=secrets,verbs=get;list;watch
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
@@ -60,7 +61,7 @@ type EmailReconciler struct {
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.18.2/pkg/reconcile
 func (r *EmailReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	log := r.Log.WithValues("email", req.NamespacedName)
+	log := log.FromContext(ctx).WithName("emailsenderconfig")
 
 	// Fetch the Email instance
 	email := &emailv1.Email{}
@@ -70,6 +71,10 @@ func (r *EmailReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
 
+	if email.Status.DeliveryStatus == "Delivered" {
+		//log.Info("email already delivered", "messageID", email.Status.MessageID)
+		return ctrl.Result{}, nil
+	}
 	// Fetch the referenced EmailSenderConfig
 	config := &emailv1.EmailSenderConfig{}
 	err = r.Get(ctx, types.NamespacedName{Name: email.Spec.SenderConfigRef, Namespace: req.Namespace}, config)
@@ -81,8 +86,16 @@ func (r *EmailReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
 
+	if config.Status.Status == "Failed" {
+		log.Error(err, "EmailSenderConfig not valid")
+		email.Status.DeliveryStatus = "Failed"
+		email.Status.Error = "EmailSenderConfig wrong configuration. Please verify"
+		r.Status().Update(ctx, email)
+		return ctrl.Result{}, client.IgnoreNotFound(err)
+	}
+
 	// Fetch the secret containing the API token
-	encodedToken, err := getSecret(ctx, config.Spec.APITokenSecretRef, r.Client, log, req.Namespace)
+	token, err := getSecret(ctx, config.Spec.APITokenSecretRef, r.Client, log, req.Namespace)
 	if err != nil {
 		log.Error(err, "unable to fetch secret")
 		email.Status.DeliveryStatus = "Failed"
@@ -91,15 +104,8 @@ func (r *EmailReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
 
-	apiToken, err := base64.StdEncoding.DecodeString(encodedToken)
-
-	if err != nil {
-		log.Error(err, "error decoding secret")
-		return ctrl.Result{}, err
-	}
-
 	// Send the email via MailerSend
-	deliveryStatus, messageID, err := sendEmail(string(apiToken), config.Spec.SenderEmail, email.Spec.RecipientEmail, email.Spec.Subject, email.Spec.Body)
+	deliveryStatus, messageID, err := sendEmail(token, config.Spec.SenderEmail, email.Spec.RecipientEmail, email.Spec.Subject, email.Spec.Body)
 	if err != nil {
 		log.Error(err, "failed to send email")
 		email.Status.DeliveryStatus = "Failed"
@@ -154,9 +160,10 @@ func sendEmailWithMailerSend(apiToken, senderEmail, recipientEmail, subject, bod
 		return "Failed", "", fmt.Errorf("failed to send email: %s", resp.Status)
 	}
 
-	var result map[string]interface{}
-	json.NewDecoder(resp.Body).Decode(&result)
-	messageID := result["x-message-id"].(string)
+	messageID := resp.Header.Get("x-message-id")
+	if messageID == "" {
+		return "Failed", "", fmt.Errorf("x-message-id not found in response headers")
+	}
 
 	return "Delivered", messageID, nil
 }
