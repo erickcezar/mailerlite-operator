@@ -61,7 +61,7 @@ type EmailReconciler struct {
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.18.2/pkg/reconcile
 func (r *EmailReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	log := log.FromContext(ctx).WithName("emailsenderconfig")
+	log := log.FromContext(ctx).WithName("email")
 
 	// Fetch the Email instance
 	email := &emailv1.Email{}

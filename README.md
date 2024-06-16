@@ -124,3 +124,4 @@ https://documentation.mailgun.com/docs/mailgun/api-reference/openapi-final/tag/M
 ## Improvements
 
 - `emailsenderconfig` watching secrets changes, so it can be updated with new secrets without recreate it  
+- When a change is made on `emailsenderconfig` or `email`, try to send the email again 
