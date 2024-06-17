@@ -9,12 +9,8 @@ The `mailerlite-operator` is a Kubernetes operator designed to manage and automa
 - To change the operator namespace, we can change it on `config/default/kustomization.yaml`
 - To change anything on operator deployment, we can change it on `config/manager/manager.yaml`
 - `emailsenderconfig` and `email` can be created in any namespace
-<<<<<<< HEAD
 - The secret must be created on the same namespace than `emailsenderconfig`
 - The secrets api token weren't pushed to the branch
-=======
-- The secret must be created on the same namespace as `emailsenderconfig`
->>>>>>> ac6649d577a4dbdb26969e17e3be7b556840b775
 
 ### Prerequisites
 - go version v1.22.0+
