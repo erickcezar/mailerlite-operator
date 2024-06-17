@@ -1,6 +1,6 @@
 # mailerlite-operator
 
-The `mailerlite-operator` is a Kubernetes operator designed to manage and automate the sending of transactional emails using multiple providers, such as MailerSend and Mailgun. This operator provides custom resource definitions (CRDs) for configuring email sender settings and defining email messages. With cross-namespace capabilities, it monitors and responds to changes in email configurations and triggers email sending processes accordingly, updating the status of email resources to reflect delivery outcomes.
+The `mailerlite-operator` is a Kubernetes operator designed to manage and automate the sending of transactional emails using multiple providers, such as MailerSend and Mailgun. This operator provides custom resource definitions (CRDs) for configuring email sender settings and defining email messages. With cross-namespace capabilities, it monitors and responds to changes in email configurations and triggers email-sending processes accordingly, updating the status of email resources to reflect delivery outcomes.
 
 ## Getting Started
 
@@ -9,7 +9,7 @@ The `mailerlite-operator` is a Kubernetes operator designed to manage and automa
 - To change the operator namespace, we can change it on `config/default/kustomization.yaml`
 - To change anything on operator deployment, we can change it on `config/manager/manager.yaml`
 - `emailsenderconfig` and `email` can be created in any namespace
-- The secret must be created on the same namespace than `emailsenderconfig`
+- The secret must be created on the same namespace as `emailsenderconfig`
 
 ### Prerequisites
 - go version v1.22.0+
@@ -17,7 +17,7 @@ The `mailerlite-operator` is a Kubernetes operator designed to manage and automa
 - kubectl version v1.11.3+.
 - Access to a Kubernetes v1.11.3+ cluster.
 
-For this demo, We are using minikube. For more details how to install it, click [here](https://minikube.sigs.k8s.io/docs/)
+For this demo, We are using minikube. For more details on how to install it, click [here](https://minikube.sigs.k8s.io/docs/)
 
 ### To Deploy on the cluster
 **Build and push your image to the location specified by `IMG`:**
@@ -33,7 +33,7 @@ But we need to run this command:
 eval $(minikube docker-env)
 ```
 
-So minikube can push images locally. Remember to turn off the imagePullPolicy:Always (use imagePullPolicy:IfNotPresent or imagePullPolicy:Never) in your yaml file. Otherwise Kubernetes won’t use your locally build image and it will pull from the network.
+So minikube can push images locally. Remember to turn off the imagePullPolicy:Always (use imagePullPolicy:IfNotPresent or imagePullPolicy:Never) in your yaml file. Otherwise Kubernetes won’t use your locally built image and will pull from the network.
 
 **NOTE:** This image ought to be published in the personal registry you specified.
 And it is required to have access to pull the image from the working environment.
@@ -61,7 +61,7 @@ You can apply the samples (examples) from the config/sample:
 kubectl apply -k config/samples/
 ```
 
->**NOTE**: Ensure that the samples has default values to test it out.
+>**NOTE**: Ensure that the samples have default values to test them out.
 
 ### To Uninstall
 **Delete the instances (CRs) from the cluster:**
@@ -120,6 +120,7 @@ https://documentation.mailgun.com/docs/mailgun/api-reference/openapi-final/tag/M
 
 ## Improvements
 
-- `emailsenderconfig` watching secrets changes, so it can be updated with new secrets without recreate it  
+- `emailsenderconfig` watching secrets changes so that it can be updated with new secrets without recreating item
+- `email` watching changes on Spec fields, so the email could resend after any updates
 - When a change is made on `emailsenderconfig` or `email`, try to send the email again 
-- DRY. Some functions could be improved and reused# mailerlite-operator 
+- DRY. Some functions could be improved, such as doing a reusable Golang code 
